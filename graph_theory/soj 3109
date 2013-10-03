@@ -1,0 +1,121 @@
+#include<cstdio>
+#include<cstring>
+#include<iostream>
+#include<algorithm>
+#include<stack>
+#include<vector>
+#define INF 1<<30
+using namespace std;
+const int MAXN=300;
+int qq[MAXN],mark[MAXN],step[MAXN];
+char s[MAXN];
+int S,T,m,n,ss;
+struct node
+{
+    int next;
+    int value;
+    int xx;
+};
+vector<node>w[MAXN];
+bool bfs(int nn)
+{
+    memset(mark,0,sizeof(mark));
+    memset(step,0,sizeof(step));
+    int start=0,en=1;
+    mark[S]=1;
+    qq[0]=S;
+    while(start<en)
+    {
+        int tt=qq[start++];
+        int len=w[tt].size();
+        for(int ii=0;ii<len;ii++)
+        {
+            int son=w[tt][ii].next;
+            if(mark[son]||w[tt][ii].value<=0)continue;
+            qq[en++]=son;
+            mark[son]=1;
+            step[son]=step[tt]+1;
+        }
+    }
+     //for(int ii=0;ii<=m+n+1;ii++)cout<<step[ii]<<' ';
+   // cout<<endl;
+    if(mark[T]==1)return true;
+    return false;
+}
+int dinic(int nn,int get_min)
+{
+    if(nn==T)return get_min;
+    int total=0;
+    int len=w[nn].size();
+    for(int ii=0;ii<len&&get_min-total>0;ii++)
+    {
+        int son=w[nn][ii].next;
+        if(step[son]!=step[nn]+1||w[nn][ii].value<=0)continue;
+        int left=dinic(son,min(get_min-total,w[nn][ii].value));
+        if(left==0)step[son]=-1;
+        total+=left;
+        w[nn][ii].value-=left;
+        int aa=w[nn][ii].xx;
+        w[son][aa].value+=left;
+    }
+    return total;
+}
+void addedge(int nn,int mm,int value)
+{
+    node ee;
+    ee.next=mm;
+    ee.value=value;
+    ee.xx=w[mm].size();
+    w[nn].push_back(ee);
+
+    ee.value=0;
+    ee.next=nn;
+    ee.xx=w[nn].size()-1;
+    w[mm].push_back(ee);
+}
+void trans(int nn,char r[300])
+{
+    stack<int>q;
+    int sta=0,dd=0;
+    int len=strlen(r);
+    while(sta<len)
+    {
+      while(r[sta]<='9'&&r[sta]>='0'){q.push(r[sta]-'0');sta++;}
+      sta++;
+      int sum=0,tt=1;
+      while(!q.empty()){sum+=tt*q.top();q.pop();tt*=10;}
+      if(dd==0){addedge(nn,T,sum);ss+=sum;}
+      else addedge(sum+n,nn,INF);
+      dd++;
+    }
+    return ;
+}
+void init()
+{
+    for(int ii=0;ii<=n+m+1;ii++)w[ii].clear();
+}
+int main()
+{
+    while(scanf("%d%d",&n,&m)!=EOF)
+    {
+        init();
+        ss=0,S=0,T=n+m+1;
+        getchar();
+        for(int ii=1;ii<=n;ii++)
+        {
+           gets(s);
+           trans(ii,s);
+        }
+        for(int ii=1;ii<=m;ii++)
+        {
+            int x;
+            scanf("%d",&x);
+            addedge(S,ii+n,x);
+        }
+        int uu=0,ans=0;
+        while(bfs(0))
+            while(uu=dinic(0,INF))ans+=uu;
+        printf("%d\n",ss-ans);
+    }
+    return 0;
+}
